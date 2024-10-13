@@ -4,6 +4,8 @@ info:
     version: '@info.app.version@'
     grailsVersion: '@info.app.grailsVersion@'
 grails:
+  cors:
+    enabled: true
   controllers:
     defaultScope: singleton
   views:
