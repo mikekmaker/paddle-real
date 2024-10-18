@@ -3,6 +3,7 @@ import grails.rest.RestfulController
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.validation.ValidationException
+import io.jsonwebtoken.JwtException
 
 @Transactional
 class GestionController extends RestfulController<Usuario> {
@@ -114,14 +115,14 @@ GestionController() {
 // Action to return mock horarios
     def getHorarios() {
         def mockHorarios = [
-            [horario_id: 1, fecha: "2024-10-23", hora: "10:00"],
-            [horario_id: 2, fecha: "2024-10-28", hora: "12:00"],
-            [horario_id: 3, fecha: "2024-10-30", hora: "14:00"],
-            [horario_id: 4, fecha: "2024-10-01", hora: "16:00"],
-            [horario_id: 5, fecha: "2024-10-04", hora: "18:00"],
-            [horario_id: 6, fecha: "2024-10-06", hora: "20:00"],
-            [horario_id: 7, fecha: "2024-10-09", hora: "22:00"],
-            [horario_id: 8, fecha: "2024-10-12", hora: "10:00"]
+            [horario_id: 1, fecha: "2024-10-11", hora: "10:00"],
+            [horario_id: 2, fecha: "2024-10-13", hora: "12:00"],
+            [horario_id: 3, fecha: "2024-10-15", hora: "14:00"],
+            [horario_id: 4, fecha: "2024-10-17", hora: "16:00"],
+            [horario_id: 5, fecha: "2024-10-19", hora: "18:00"],
+            [horario_id: 6, fecha: "2024-10-21", hora: "20:00"],
+            [horario_id: 7, fecha: "2024-10-23", hora: "22:00"],
+            [horario_id: 8, fecha: "2024-10-25", hora: "10:00"]
         ]
         render mockHorarios as JSON
     }
@@ -139,36 +140,55 @@ GestionController() {
     // Validate token and user role (idTipoUsuario)
     def validateRoleAndToken() {
         def token = request.getHeader("Authorization")?.replace("Bearer ", "")
-        def idTipoUsuario = request.JSON.idTipoUsuario
-
+        //def idTipoUsuario = request.JSON.idTipoUsuario
+        Integer idTipoUsuario = (request.JSON.idTipoUsuario?.trim()) ? request.JSON.idTipoUsuario.toInteger() : null
+        println "tipo de usuario recibido: " + idTipoUsuario
+        
         if (!token) {
-            render(status: 401, text: 'Token is required')
+            render([message: 'Token es requerido', isValid: false] as JSON, status: 401)
             return
         }
         
         if (!idTipoUsuario) {
-            render(status: 400, text: 'idTipoUsuario is required')
+            render([message: 'idTipoUsuario es requerido', isValid: false] as JSON, status: 400)
             return
         }
 
         try {
-            def alias = jwtService.verifyToken(token)
+
+            // def jwtService = grailsApplication.mainContext.getBean('jwtService')
+            //     jwtService.getClass().methods.each { method ->
+            //         println method.name + " " + method.parameterTypes.collect { it.simpleName }.join(', ')
+            //     }
+            def isValid = jwtService.validateToken(token) // Call without the secret
+            println "es valido?:" + isValid
+            def alias = jwtService.getUsernameFromToken(token)
+            println "alias recuperado:" + alias
             def usuario = Usuario.findByAlias(alias)
-
+            println "contrasenia encontrada: " + usuario.contrasena
+            //println "idTipoUsuario de usuario:" + usuario.idTipoUsuario
+            println "idTipoUsuario de usuario: ${usuario?.idTipoUsuario}"
+            
+            //print "tipo valido :"  (usuario.idTipoUsuario != idTipoUsuario)
             if (!usuario) {
-                render(status: 404, text: 'User not found')
+                render([message: 'Usuario no encontrado', isValid: false] as JSON, status: 404)
                 return
             }
 
+            //print "idTipoUsuario de usuario:" + usuario.idTipoUsuario
             if (usuario.idTipoUsuario != idTipoUsuario) {
-                render(status: 403, text: 'Invalid role')
-                return
+                render([message: 'Role no valido', isValid: false] as JSON, status: 403)
+               return
             }
 
-            render([message: 'Valid token and role', usuario: usuario.alias] as JSON, status: 200)
+            render([message: 'Token y role Valido', isValid: true] as JSON, status: 200)
 
+        } catch (JwtException e) {
+            log.error("JWT validation failed: ${e.message}") // Log specific error message
+            render([message: 'Token no valido o el mismo ha expirado: ' + e.message, isValid: false] as JSON, status: 401)
         } catch (Exception e) {
-            render(status: 401, text: 'Invalid or expired token: ' + e.message)
+            log.error("Unexpected error: ${e.message}") // Log unexpected errors
+            render([message: 'Error inesperado: ' + e.message, isValid: false] as JSON, status: 500)
         }
     }
 }
