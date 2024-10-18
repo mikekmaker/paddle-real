@@ -15,12 +15,13 @@ RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.2.0
 COPY . /app
 
 # Step 6: Build the Grails application using the Gradle wrapper
-RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && ./gradlew build -x test -x integrationTest"
-
+#RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && ./gradlew build -x test -x integrationTest"
+RUN bash -c "./gradlew build -x test -x integrationTest"
 # Step 7: Expose the port the application will run on (default Grails port is 8080)
 EXPOSE 8080
 
 # Step 8: Start the Grails application using the Gradle wrapper
 #CMD bash -c "source /root/.sdkman/bin/sdkman-init.sh && grails run-app"
 #CMD ["bash", "-c", "source /root/.sdkman/bin/sdkman-init.sh && grails run-app"]
-CMD ["bash", "-c", "source /root/.sdkman/bin/sdkman-init.sh && ./gradlew bootRun"]
+#CMD ["bash", "-c", "source /root/.sdkman/bin/sdkman-init.sh && ./gradlew bootRun"]
+CMD ["bash", "-c", "./gradlew bootRun"]

@@ -4,6 +4,12 @@ info:
     version: '@info.app.version@'
     grailsVersion: '@info.app.grailsVersion@'
 grails:
+  plugin:
+    springsecurity:
+      jwt:
+        secret: 'taller6'
+        algorithm: 'HS256'
+        expiration: 3600 #1hs
   cors:
     enabled: true
   controllers:

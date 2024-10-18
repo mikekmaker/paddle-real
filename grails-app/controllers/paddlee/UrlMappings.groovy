@@ -9,7 +9,7 @@ class UrlMappings {
         "/api/usuarios/$id"(controller: 'gestion', action: 'delete', method: 'DELETE')
         "/api/horarios"(controller: "gestion", action: "getHorarios", method: "GET")
         "/api/canchas"(controller: "gestion", action: "getCanchas", method: "GET")
-
+        "/api/me"(controller:"gestion",action:"validateRoleAndToken", method:"POST")
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here
